@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康運動くじ引き</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background 0.5s ease;
+            overflow: hidden;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+        }
+        
+        h1 { 
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            color: #333;
+        }
+        
+        .kuji-box {
+            width: 200px;
+            height: 250px;
+            margin: 0 auto 40px;
+            position: relative;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        .box {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #2ECC71, #27AE60);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            transition: transform 0.1s;
+        }
+        
+        .box:active {
+            transform: scale(0.98);
+        }
+        
+        .box.shake {
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        
+        .stick {
+            position: absolute;
+            width: 15px;
+            height: 180px;
+            background: linear-gradient(to right, #52BE80, #7DCEA0);
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .box.pulling .stick {
+            top: -80px;
+        }
+        
+        .instruction {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        #result-container {
+            min-height: 200px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        #result-container.show {
+            opacity: 1;
+        }
+        
+        #fortune {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #222;
+            background: rgba(255,255,255,0.95);
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        #message {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #333;
+            padding: 25px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .reset-btn {
+            margin-top: 30px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        .reset-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+        
+        .hidden { display: none; }
+        
+        /* スマホ対応 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                width: 95%;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 30px;
+            }
+            
+            .kuji-box {
+                width: 150px;
+                height: 200px;
+                margin: 0 auto 30px;
+            }
+            
+            .stick {
+                width: 12px;
+                height: 140px;
+            }
+            
+            .instruction {
+                font-size: 1rem;
+                margin-bottom: 20px;
+            }
+            
+            #fortune {
+                font-size: 2rem;
+                padding: 12px 20px;
+                margin: 15px 0;
+            }
+            
+            #message {
+                font-size: 1.1rem;
+                padding: 20px;
+                line-height: 1.7;
+            }
+            
+            .reset-btn {
+                padding: 10px 25px;
+                font-size: 0.95rem;
+                margin-top: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .kuji-box {
+                width: 120px;
+                height: 160px;
+            }
+            
+            .stick {
+                width: 10px;
+                height: 110px;
+            }
+            
+            #fortune {
+                font-size: 1.6rem;
+                padding: 10px 15px;
+            }
+            
+            #message {
+                font-size: 1rem;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>💪 健康運動くじ引き</h1>
+    
+    <div id="kuji-section">
+        <div class="instruction">箱をタップして、くじを引こう</div>
+        <div class="kuji-box" id="kuji-trigger">
+            <div class="box" id="box">
+                <div class="stick"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="result-container">
+        <div id="fortune"></div>
+        <div id="message"></div>
+        <button class="reset-btn" onclick="reset()">もう一度引く</button>
+    </div>
+</div>
+
+<script>
+// AudioContext for sound effects
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioContext = new AudioContext();
+
+// ドラムロール音
+function playDrumroll() {
+    const duration = 1.5;
+    const now = audioContext.currentTime;
+    
+    for(let i = 0; i < 30; i++) {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        osc.frequency.value = 100 + Math.random() * 50;
+        osc.type = 'square';
+        
+        const time = now + (i * duration / 30);
+        gain.gain.setValueAtTime(0.1, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+        
+        osc.start(time);
+        osc.stop(time + 0.05);
+    }
+}
+
+// 結果音（当たり）
+function playResultSound() {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    
+    const now = audioContext.currentTime;
+    
+    osc.frequency.setValueAtTime(523, now); // C5
+    osc.frequency.setValueAtTime(659, now + 0.1); // E5
+    osc.frequency.setValueAtTime(784, now + 0.2); // G5
+    
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    
+    osc.start(now);
+    osc.stop(now + 0.4);
+}
+
+const fortunes = [
+    {
+        title: "ダイエットの罠",
+        message: "痩せないのは、『太ってる自分』を手放したくないからですよ",
+        bg: "linear-gradient(135deg, #F093FB 0%, #F5576C 100%)"
+    },
+    {
+        title: "運動継続の真実",
+        message: "運動が続かない？本当は変わりたくないだけです",
+        bg: "linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%)"
+    },
+    {
+        title: "腰痛の投影",
+        message: "腰が痛いのは、誰かに重荷を背負わされてると思ってるから",
+        bg: "linear-gradient(135deg, #43E97B 0%, #38F9D7 100%)"
+    },
+    {
+        title: "筋トレの盲点",
+        message: "頑張ってるのに効果ない？『どうせ無駄』って信じてませんか",
+        bg: "linear-gradient(135deg, #FA709A 0%, #FEE140 100%)"
+    },
+    {
+        title: "疲労の本質",
+        message: "いつも疲れてるのは、本当は休みたいのに休めない自分への怒り",
+        bg: "linear-gradient(135deg, #30CFD0 0%, #330867 100%)"
+    },
+    {
+        title: "食欲の正体",
+        message: "食べ過ぎるのは、心の飢えを食べ物で埋めようとしてるだけ",
+        bg: "linear-gradient(135deg, #A8EDEA 0%, #FED6E3 100%)"
+    },
+    {
+        title: "膝痛のメッセージ",
+        message: "膝が痛い？前に進むことを、あなたが拒否してるサインです",
+        bg: "linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%)"
+    },
+    {
+        title: "睡眠の質",
+        message: "眠れないのは、明日が来るのが怖いからじゃないですか",
+        bg: "linear-gradient(135deg, #FFECD2 0%, #FCB69F 100%)"
+    },
+    {
+        title: "肩こりの投影",
+        message: "肩が凝るのは、責任を重く感じすぎてる証拠。降ろしていいですよ",
+        bg: "linear-gradient(135deg, #FF6E7F 0%, #BFE9FF 100%)"
+    },
+    {
+        title: "完璧主義の弊害",
+        message: "完璧なフォーム求めすぎ。『下手な自分』を許せないだけでしょ",
+        bg: "linear-gradient(135deg, #E0C3FC 0%, #8EC5FC 100%)"
+    },
+    {
+        title: "比較の罠",
+        message: "あの人と比べて落ち込む？自分で自分を否定してるだけですよ",
+        bg: "linear-gradient(135deg, #F77062 0%, #FE5196 100%)"
+    },
+    {
+        title: "体重の執着",
+        message: "体重計の数字に一喜一憂してる間は、本質的には変わりません",
+        bg: "linear-gradient(135deg, #C471F5 0%, #FA71CD 100%)"
+    },
+    {
+        title: "柔軟性の欠如",
+        message: "体が硬いのは、心が硬いから。柔軟性は身体だけの話じゃない",
+        bg: "linear-gradient(135deg, #667EEA 0%, #764BA2 100%)"
+    },
+    {
+        title: "トレーナー依存",
+        message: "指導者に頼りすぎ。自分で決められないのは、自分を信じてないから",
+        bg: "linear-gradient(135deg, #FBC2EB 0%, #A6C1EE 100%)"
+    },
+    {
+        title: "モチベーション神話",
+        message: "やる気が出ない？最初から『やりたくない』を認めたらどうですか",
+        bg: "linear-gradient(135deg, #FDCBF1 0%, #E6DEE9 100%)"
+    },
+    {
+        title: "姿勢の真実",
+        message: "猫背なのは、世間に対して心を閉じてる証拠。胸を開けますか",
+        bg: "linear-gradient(135deg, #52ACFF 0%, #FFE32C 100%)"
+    },
+    {
+        title: "リバウンドの法則",
+        message: "また太った？『痩せた自分は本当の私じゃない』って思ってるから",
+        bg: "linear-gradient(135deg, #F9D423 0%, #FF4E50 100%)"
+    },
+    {
+        title: "怪我の意味",
+        message: "よく怪我する？それ、無意識に『休みたい』って叫んでるんです",
+        bg: "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)"
+    },
+    {
+        title: "他者評価の罠",
+        message: "褒められたい、認められたい。それ、自分で自分を認めてないだけ",
+        bg: "linear-gradient(135deg, #0BA360 0%, #3CBA92 100%)"
+    },
+    {
+        title: "年齢の言い訳",
+        message: "『歳だから』って言う度に、本当に老けていくんですよ",
+        bg: "linear-gradient(135deg, #EE9CA7 0%, #FFDDE1 100%)"
+    }
+];
+
+let isDrawing = false;
+
+function drawKuji() {
+    if(isDrawing) return;
+    isDrawing = true;
+    
+    // AudioContext resume (for mobile)
+    audioContext.resume();
+    
+    const box = document.getElementById('box');
+    const kujiSection = document.getElementById('kuji-section');
+    const resultContainer = document.getElementById('result-container');
+    
+    // くじを引くアニメーション
+    box.classList.add('pulling');
+    playDrumroll();
+    
+    setTimeout(() => {
+        box.classList.remove('pulling');
+        box.classList.add('shake');
+    }, 500);
+    
+    setTimeout(() => {
+        box.classList.remove('shake');
+        
+        // ランダムに結果を選択
+        const result = fortunes[Math.floor(Math.random() * fortunes.length)];
+        
+        // 背景を変更
+        document.body.style.background = result.bg;
+        
+        // 結果を表示
+        document.getElementById('fortune').innerText = result.title;
+        document.getElementById('message').innerText = result.message;
+        
+        kujiSection.classList.add('hidden');
+        resultContainer.classList.add('show');
+        
+        playResultSound();
+        isDrawing = false;
+    }, 2000);
+}
+
+function reset() {
+    const kujiSection = document.getElementById('kuji-section');
+    const resultContainer = document.getElementById('result-container');
+    
+    resultContainer.classList.remove('show');
+    
+    setTimeout(() => {
+        kujiSection.classList.remove('hidden');
+        document.body.style.background = 'linear-gradient(135deg, #2ECC71 0%, #27AE60 100%)';
+    }, 500);
+}
+
+// 初期背景
+document.body.style.background = 'linear-gradient(135deg, #2ECC71 0%, #27AE60 100%)';
+
+// イベントリスナー設定
+document.getElementById('kuji-trigger').addEventListener('click', drawKuji);
+document.getElementById('kuji-trigger').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    drawKuji();
+});
+</script>
+</body>
+</html>
